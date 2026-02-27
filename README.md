@@ -2,10 +2,10 @@
 This repository contains code, data, and visualizations for a random side project examining taxonomic patterns of publications in Nature or Science that name at least one new species based on fossil material (i.e. extinct taxa). It is only a food-for-thought retrospective analysis and is not intended to be used as some sort of predictive tool for which high-profile journal might be preferable for aiming a novel taxon manuscript.
 
 ## Metadata
-Author: Bryan M. Gee ([ORCID: 0000-0003-4517-3290](https://orcid.org/0000-0003-4517-3290))
-Email: bryangee.temnospondyli@gmail.com
-Version: 1.0.0
-Last updated: 2026/02/27
+* Author: Bryan M. Gee ([ORCID: 0000-0003-4517-3290](https://orcid.org/0000-0003-4517-3290))
+* Email: bryangee.temnospondyli@gmail.com
+* Version: 1.0.0
+* Last updated: 2026/02/27
 
 ## Contents
 There are three scripts in this repository:
@@ -49,4 +49,5 @@ In order to gain insight into trends by publishing authors on these papers, I ut
 Metadata about journal publications and taxonomic classifications is typically regarded as non-creative and thus not eligible to be held in copyright. All data included here are thus treated as being in the public domain (CC0 license waiver). The code is licensed under MIT, which basically allows anyone to do anything with it as long as they credit the original (read the License file for more). The visualizations are creative, but I see no point in copyrighting them since anyone can regenerate them on their own with my code and dataset.
 
 ### Re-use and requirements
+
 Anyone should feel free to re-use and re-purpose these materials. If you make use of public APIs, please make sure to use best practices for making polite requests to REST APIs. You will need to install various Python modules not in the standard library: *geopandas*, *matplotlib*, *pandas* and *requests*. These are all standard, widely used modules available on PyPi. If you want to produce the map plots, you will need to get the shapefile from: [https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/](https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/).
