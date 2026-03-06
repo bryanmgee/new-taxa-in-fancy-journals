@@ -55,4 +55,5 @@ Metadata about journal publications and taxonomic classifications is typically r
 Anyone should feel free to re-use and re-purpose these materials. If you make use of public APIs, please make sure to use best practices for making polite requests to REST APIs. You will need to install various Python modules not in the standard library: *geopandas*, *matplotlib*, *pandas* and *requests*. These are all standard, widely used modules available on PyPi. If you want to produce the map plots, you will need to get the shapefile from: [https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/](https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/).
 
 ## Version notes
+* **Version 1.1.0** provides updated data and the script for retrieving metadata on articles.
 * **Version 1.0.1** fixes two data entry bugs that did not exert significant impact on initial graphs. Assessment of two other tickets concluded that they are not currently issues.
