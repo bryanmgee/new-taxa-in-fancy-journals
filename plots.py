@@ -32,14 +32,12 @@ palaeo = df_classified[df_classified['journal'] == 'Palaeontology']
 dfs_dict = {
     'nature-science': fancy,
     'pnas-currentbio': sorta_fancy,
-    # 'jvp': jvp,
     'palaeontology': palaeo
 }
 axis_dict = {
     'nature-science': 'Nature/Science',
     'pnas-currentbio': 'PNAS/Current Bio',
-    # 'jvp': 'JVP',
-    'palaeo': 'Palaeontology'
+    'palaeontology': 'Palaeontology'
 }
 
 ### PLOTTING
