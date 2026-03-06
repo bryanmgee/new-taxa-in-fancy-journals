@@ -12,7 +12,7 @@ print(f'Imported file with {len(df)} entries.\n')
 
 # Write time-stamped input file for archival purposes
 today = datetime.now().strftime('%Y%m%d') 
-df.to_csv(f'outputs/{today}_input-data.csv')
+df.to_csv(f'outputs/{today}_input-data.csv', encoding='utf-8-sig')
 
 # Create outputs directory
 if os.path.isdir('outputs'):
@@ -50,9 +50,9 @@ for clade in df_clean['genus']:
 df_taxonomic_ranks = pd.DataFrame(results)
 
 df_taxonomic_ranks['genus'] = df_clean['genus']
-df_taxonomic_ranks.to_csv(f'{outputs_dir}/{today}_df-ranks-taxonomy.csv', index=False)
+df_taxonomic_ranks.to_csv(f'{outputs_dir}/{today}_df-ranks-taxonomy.csv', index=False, encoding='utf-8-sig')
 
 df_expanded = pd.merge(df_clean, df_taxonomic_ranks, left_index=True, right_index=True)
-df_expanded.to_csv(f'{outputs_dir}/{today}_df-with-taxonomy.csv', index=False)
+df_expanded.to_csv(f'{outputs_dir}/{today}_df-with-taxonomy.csv', index=False, encoding='utf-8-sig')
 
 print('Analysis concluded.\n')
