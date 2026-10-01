@@ -99,8 +99,6 @@ print(f'Number of genera that ranks were not retrieved for: {missing_genera} out
 df_taxonomic_ranks = df_taxonomic_ranks.dropna(subset=['genus'])
 df_taxonomic_ranks['source'] = 'PBDB API'
 
-df_taxonomic_ranks.to_csv(f'{outputs_dir}/{today}_taxon-ranks.csv', index=False, encoding='utf-8-sig')
-
 # Combine with input data
 df_expanded = pd.merge(df_names, df_taxonomic_ranks, how='left', on='genus')
 df_expanded.to_csv(f'{outputs_dir}/{today}_dataset-with-taxonomy.csv', index=False, encoding='utf-8-sig')

@@ -22,8 +22,6 @@ except ValueError:
 # Summarize all taxa counts
 ## Currently, there are 71 maximum ranks
 rank_columns = df.loc[:, '0':'70'].columns
-taxa_counts = df.loc[:, rank_columns].stack().value_counts()
-taxa_counts.to_csv(f'{outputs_dir}/{today}_taxon-counts-ranking.csv')
 
 ranks = ['Problematica', 'Eukaryota', 'Plantae', 'Fungi', 'Prokaryota', 'Protozoa', 'Chromalveolata', 'Animalia', 'Bilateria', 'Cyclostomi', 'Deuterostomia', 'Protostomia', 'Lophophorata', 'Mollusca', 'Panarthropoda', 'Insecta', 'Chordata', 'Vertebrata', 'Gnathostomata', 'Actinopterygii', 'Sarcopterygii', 'Chondrichthyes', 'Tetrapodomorpha', 'Tetrapoda', 'Amphibia', 'Amniota', 'Lepidosauromorpha', 'Archosauromorpha', 'Pantestudines', 'Pseudosuchia', 'Avemetatarsalia', 'Dinosauromorpha', 'Dinosauria', 'Ornithischia', 'Saurischia', 'Theropoda', 'Mammaliamorpha', 'Mammaliaformes', 'Mammalia', 'Marsupialiformes', 'Placentalia', 'Primates', 'Theria', 'Avialae', 'Aves']
 for rank in ranks:
