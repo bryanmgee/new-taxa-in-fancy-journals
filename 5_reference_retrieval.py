@@ -8,6 +8,9 @@ import requests
 from datetime import datetime
 from rich.progress import track
 
+# Toggle for quick test runs with small sample size (set to TRUE if you want that)
+test = False
+
 # Read in cleaned-up data file
 outputs_dir = 'outputs'
 today = datetime.now().strftime('%Y%m%d') 
@@ -26,23 +29,22 @@ df = df.sort_values(by='genus')
 ## Restrict to unique articles
 df_articles = df.drop_duplicates(subset=['doi'], keep='first')
 
-# To run small batch
-test = False
 if test:
     df_articles = df_articles.head(400)
 
-# Create empty lists
-## To store API response
-jsons = []
-## To store any DOIs that fail
+# Looping through Crossref API
+
+## Create empty lists for results and any failures
+results = []
 errors = []
+
 for doi in track(df_articles['doi'], description=f'Retrieving citations for {len(df_articles)} articles...'):
     try:
         url = f'https://api.crossref.org/works/{doi}'
         response = requests.get(url)
         if response.status_code == 200:
             new_data = response.json()
-        jsons.append(new_data)
+        results.append(new_data)
     except requests.exceptions.Timeout:
         print(f'Error retrieving citation for {doi}: {e}')
 
@@ -59,12 +61,9 @@ def get_first_letters(text):
     result = ''.join(tokens)
     return re.sub(r'-+', '-', result).strip('-')
 
-with open(f'{today}_crossref_response.json', 'w', encoding='utf-8') as file:
-    json.dump(jsons, file)
-
 # Subset API response
 data_select_crossref = []
-for article in jsons:
+for article in results:
     item = article.get('message', None)
     journal_field = item.get('container-title', None)
     journal_name = journal_field[0] if journal_field else None
@@ -113,10 +112,10 @@ for article in jsons:
 df_data_select_crossref = pd.DataFrame(data_select_crossref)
 df_data_select_crossref.to_csv(f'{today}_crossref_filtered_df.csv', index=False, encoding='utf-8-sig')
 
-## Casing
-### Convert author names to title case
+# Dataframe clean-up
+## Convert author names to title case
 df_data_select_crossref['authors'] = df_data_select_crossref['authors'].str.title()
-### Remove period if ending the string of authors to avoid double period
+## Remove period if ending the string of authors to avoid double period
 df_data_select_crossref['authors'] = df_data_select_crossref['authors'].str.replace(r'\.$', '', regex=True)
 ## Replace HTML tags with markdown syntax
 df_data_select_crossref['title'] = df_data_select_crossref['title'].str.replace('<i>', '*', regex=False)
@@ -124,8 +123,11 @@ df_data_select_crossref['title'] = df_data_select_crossref['title'].str.replace(
 ## Replace hyphens with en-dashes in pagination
 df_data_select_crossref['pagination'] = df_data_select_crossref['pagination'].str.replace('-', '–', regex=False)
 
+# Export to Word doc
+## Initialize document with header
 markdown_text = '# References\n\n'
 
+## Add to markdown string as bulleted list
 for index, row in df_data_select_crossref.iterrows():
     # Conditionally display issue if it exists
     if pd.notnull(row['issue']):
@@ -134,8 +136,7 @@ for index, row in df_data_select_crossref.iterrows():
         ref = (f'{row['authors']}. ({row['publication_year']}). {row['title']}. *{row['journal']}*, *{row['volume']}*: {row['pagination']}. DOI: [{row['doi']}](https://doi.org/{row['doi']})')
     markdown_text += f'- {ref}\n'
 
-# print(markdown_text)
-
+## Call ref-doc with specific formatting
 args = ['--reference-doc=ref-doc.docx']
 
 pypandoc.convert_text(
@@ -146,7 +147,7 @@ pypandoc.convert_text(
     extra_args=args
 )
 
-print('Document exported successfully.\n')
+print('Reference document exported successfully.\n')
 
 if errors:
     print(errors)

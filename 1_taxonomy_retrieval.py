@@ -7,12 +7,10 @@ import time
 from datetime import datetime
 from rich.progress import track
 
-###################################################################################
-### To test with small number of taxa against API (to make sure the call works) ###
-###################################################################################
+# To test with small number of taxa against API (to make sure the call works) #
 test = True
 
-# Read in latest version of file
+# Read in dataset
 df = pd.read_csv('input-data.csv')
 print(f'Imported file with {len(df)} entries.\n')
 
@@ -28,7 +26,7 @@ else:
     print('outputs directory has been created.\n')
 outputs_dir = 'outputs'
 
-# Remove articles with no actual new species
+# Remove articles with no new species
 df_names = df.dropna(subset='novel_taxon', ignore_index=True)
 print(f'Processing {len(df_names)} unique species names.\n')
 
@@ -41,25 +39,24 @@ df_names['age2'] = df_names['age2'].str.strip()
 
 # Extract genus
 df_names['genus'] = df_names['novel_taxon'].str.split().str[0]
-## Removing '?' around genus names (https://stackoverflow.com/questions/50444346/fast-punctuation-removal-with-pandas)
+## Removing '?' around genus names
 punc = re.compile(r'[^\w\s]+')
 df_names['genus'] = [punc.sub('', x) for x in df_names['genus'].tolist()]
 
-df_names.to_csv('outputs/test-cleaning.csv')
-
-## Deduplicate for counts
+## Create df of unique genera
 df_unique = df_names.drop_duplicates(subset=['genus'])
 df_unique = df_unique.sort_values(by='genus')
 
+# Retrieving from PBDB API
 if test:
     df_unique = df_unique.head(50)
 print(f'Retrieving taxonomic ranks for {len(df_unique)} unique genera.\n')
 
+## Create empty lists for results and any failures
 results = []
 errors = []
 
 for clade in track(df_unique['genus'], description='Retrieving ranks...'):
-    # print(f'Retrieving taxonomy of {clade}...\n')
     try:
         response = requests.get(f'https://paleobiodb.org/data1.2/taxa/list.json?name={clade}&rel=all_parents')
         data = response.json()
@@ -74,6 +71,7 @@ for clade in track(df_unique['genus'], description='Retrieving ranks...'):
         errors.append(clade)
 
 df_taxonomic_ranks = pd.DataFrame(results)
+
 # Print any failed retrievals (API issues)
 print(f"\nNumber of failed API calls: {len(errors)}\n")
 if len(errors) > 0:
@@ -89,9 +87,10 @@ with open(f'{outputs_dir}/{today}_failed-retrievals.csv', 'w', newline='', encod
 
 # Extract right-most value (genus from PBDB, blank if no match in PBDB)
 df_taxonomic_ranks['genus'] = df_taxonomic_ranks.ffill(axis=1).iloc[:, -1]
-# Move the newly created last column (genus) to the front
+## Move the newly created last column (genus) to the front
 cols = list(df_taxonomic_ranks.columns)
 df_taxonomic_ranks = df_taxonomic_ranks[[cols[-1]] + cols[:-1]]
+
 # Calculate number of entries for which rank info was not retrieved
 missing_genera = df_taxonomic_ranks['genus'].isna().sum()
 missing_prop = round((missing_genera / len(df_unique)) * 100)

@@ -7,6 +7,9 @@ import requests
 from datetime import datetime
 from rich.progress import track
 
+# Toggle for quick test runs with small sample size (set to TRUE if you want that)
+test = False
+
 # Read in latest version of file
 outputs_dir = 'outputs'
 today = datetime.now().strftime('%Y%m%d') 
@@ -27,26 +30,15 @@ with open('config.json', 'r') as file:
     config = json.load(file)
 pyalex.config.api_key = config['KEYS']['openalexToken']
 
-# Create outputs directory
-if os.path.isdir('outputs'):
-        print('outputs directory found - no need to recreate.\n')
-else:
-    os.mkdir('outputs')
-    print('outputs directory has been created.\n')
-
-# Date for filename
-today = datetime.now().strftime('%Y%m%d') 
-
 # Remove blanks
 df_clean = df.dropna(subset='novel_taxon', ignore_index=True)
 print(f'Processing file with {len(df_clean)} entries.\n')
 df_clean_dedup = df_clean.drop_duplicates(subset=['doi'])
 print(f'Processing {len(df_clean_dedup)} articles.\n')
 
+## Restrict to Nature or Science
 df_clean_dedup_high_JIF = df_clean_dedup[(df_clean_dedup['journal'] == 'Science') | (df_clean_dedup['journal'] == 'Nature')]
 
-# Toggle for quick test runs with small sample size (set to TRUE if you want that)
-test = False
 if test:
     df_clean_dedup_high_JIF = df_clean_dedup_high_JIF.head(15)
 
@@ -137,13 +129,15 @@ for item in articles:
     })
 
 df_openalex = pd.json_normalize(data_select_openalex)
+# Dataframe clean-up
+## DOI clean-up
 df_openalex['doi'] = df_openalex['doi'].str.replace('https://doi.org/', '')
-# Fixing weird edge case where journal is mislabeled in OpenAlex
+## Fixing weird edge case where journal is mislabeled in OpenAlex
 df_openalex['journal'] = df_openalex['journal'].str.replace('Nature Cell Biology', 'Nature', regex=False)
 
 df_openalex.to_csv(f'outputs/{today}_openalex-articles.csv', index=False, encoding='utf-8-sig')
 
-# Exploding on author name and affiliation
+# Exploding on author name and affiliation (one author per row)
 df_authors_individual = df_openalex.explode(['names', 'orcids', 'names_and_orcids', 'original_affiliations'])
 df_authors_individual.to_csv(f'outputs/{today}_openalex-authors-list.csv', index=False, encoding='utf-8-sig')
 
@@ -167,4 +161,4 @@ if errors:
 else:
     print('No DOIs failed retrieval.\n')
 
-print('Analysis concluded.\n')
+print('Author analysis concluded.\n')

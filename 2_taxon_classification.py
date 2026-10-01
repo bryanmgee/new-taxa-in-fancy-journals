@@ -70,6 +70,7 @@ condition = (df['Amniota'] == True) & (df['classification'].isna())
 df.loc[condition, 'classification'] = 'Other amniotes'
 condition = (df['2'].isna())
 df.loc[condition, 'classification'] = 'Other'
+
 ## Catch-all for anything remaining
 condition = (df['classification'].isna())
 df.loc[condition, 'classification'] = 'Other'
@@ -79,4 +80,4 @@ print(f'Number of unclassified taxa: {unclassified} (includes multi-species gene
 
 df.to_csv(f'{outputs_dir}/{today}_dataset-classified.csv', index=False, encoding='utf-8-sig')
 
-print('Analysis concluded.\n')
+print('Taxonomic re-classification concluded.\n')
