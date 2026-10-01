@@ -1,59 +1,45 @@
 # README
-This repository contains code, data, and visualizations for a random side project examining taxonomic patterns of publications in Nature or Science that name at least one new species based on fossil material (i.e. extinct taxa). It is only a food-for-thought retrospective analysis and is not intended to be used as some sort of predictive tool for which high-profile journal might be preferable for aiming a novel taxon manuscript.
+This repository contains code, data, and visualizations for a random side project examining taxonomic patterns of publications in Nature or Science that name at least one new species based on fossil material (i.e. extinct taxa). 
 
 ## Metadata
-* Author: Bryan M. Gee ([ORCID: 0000-0003-4517-3290](https://orcid.org/0000-0003-4517-3290))
-* Email: bryangee.temnospondyli@gmail.com
-* Version: 1.1.0
-* Last updated: 2026/03/06
+* *Version*: 2.0.0
+* *Released*: 2026/10/02
+* *Author(s)*: Bryan M. Gee ([ORCID: 0000-0003-4517-3290](https://orcid.org/0000-0003-4517-3290))
+* *Contributor(s)*: None
+* *License*: [MIT](https://opensource.org/license/mit)
+* *README last updated*: 2026/10/02
 
 ## Contents
-There are four scripts in this repository:
-1. *taxonomy-retrieval.py*: This script takes the input file with the list of new species and their associated bibliographic information and retrieves information from the PBDB API on taxonomic ranks. 
-2. *taxon-classification.py*: This script takes the manually annotated output file from the first script and then applies a series of classifications to bin species into more logical bins for comparison.
-3. *plots.py*: This script generates the plots.
-4. *article-retrieval.py*: This script retrieves metadata (on authors mainly) for papers describing new species.
+| File | Description |
+|------|-------------|
+| `1_taxonomy_retrieval.py` | This takes `input-data.csv`, removes all papers without a novel species, and extracts the clean genus name from the novel species and loops through the PBDB API to retrieve taxonomic ranks for that genus. Some replacement name editing is hard-coded in this script. |
+| `2_taxon_classification.py` | This takes the manually edited dataframe of `1_taxonomy_retrieval.py` and searches across all taxonomic ranks for specified clade names (e.g., Dinosauria), returning Boolean columns for each. Using these Boolean columns, it then classifies each taxon into one of the 20 categories specified in the preprint. |
+| `3_author_retrieval.py` | This script is 'optional' insofar as it is used only for a small side analysis to examine repeat authorship in *Nature* and *Science*. It restricts the dataframe further to only naming papers in these two journals, extracts select author metadata for each unique DOI through the OpenAlex API, and generates article counts for each unique name, each unique ORCID, and each unique name-ORCID combination. |
+| `4_plotting.py` | This takes outputs of `2_taxon_classification.py` and `3_author_retrieval.py` and generates a single summary text file and all plots. |
+| `5_reference_retrieval.py` | This takes the output of `2_taxon_classification.py`, extracts select article metadata for each unique DOI through the Crossref API, and generates a formatted reference in Markdown format that is exported into a Word document. |
+| `config-template.json` | This file is used to protect your OpenAlex API token; you should obtain one, populate this file with it, and then rename it as `config.json`. |
+| `ref-doc.docx` | This file is a lightly formatted Word file to be used as a template for how to format the references exported from `5_reference_retrieval.py`. You can modify the styles however you prefer for normal and hyperlinked text. |
 
-There are two data files in this repository:
-1. *input-data.csv*: This is the data in the original collected format. You will need this if you want to re-run the code.
-2. *{date}_df-classified.csv*: This is the data in the final output version after taxonomic rank information has been compiled, manual clean-up and augmentation has been performed, and the semi-haphazard classification scheme described below has been applied. You don't need this to re-run the code unless you skip to the plotting part. It will otherwise be regenerated if you run the first two scripts.
+The scripts are numbered based on the order in which they should be run to reproduce the results of the preprint or to use the same workflow for other data. `3_author_retrieval.py` only needs to be run 
 
-## Methods
-### Article identification
-I first made web queries for the phrase 'sp. nov. fossil' in *Nature* and *Science*'s websites, **restricting the search to articles published between 2016 and 2016, inclusive**. The links are:
-* [Nature](https://www.nature.com/search?q=sp.+nov.+fossil&order=relevance&journal=nature&article_type=research&date_range=2010-2026)
-* [Science](https://www.science.org/action/doSearch?AllField=sp.+nov.+fossil&SeriesKey=science&startPage=&ConceptID=505154&AfterYear=2010&BeforeYear=2027&queryID=52%2F9564754844)
+The script generates several output files, some of which are included in the associated [Zenodo dataset](https://doi.org/10.5281/zenodo.23090585). All output files generated by the scripts are briefly described below:
 
-These searches have to be done through the journals' site, rather than through a public resource like the Crossref API, because they have to be able to search the entire text, which is often paywalled, not just the publicly available title and abstract.
 
-Because the sample size is a little low, and these journals are atypical, I wanted a representative of a more "normal" journal. I went with the *Journal of Vertebrate Paleontology* for two reasons: (1) Journal of Paleontology's date filters get messed up for old articles that were digitized (these are filtered by their date of being put online, not the original publication date) and (2) most high-profile extinct taxa naming papers are on vertebrates. The link for [JVP](https://www.tandfonline.com/action/doSearch?AllField=sp.+nov.&SeriesKey=ujvp20&content=standard&dateRange=[20100101+TO+20261231]&target=default&sortBy=Earliest_desc&startPage=&pageSize=50). As a note, there are almost 750 articles returned for JVP in this time range, so the data for JVP is only through 2020, inclusive. The dataset now includes data for [*Palaeontology*](https://onlinelibrary.wiley.com/action/doSearch?AfterYear=2010&AllField=sp.+nov.&BeforeYear=2026&SeriesKey=14754983&content=articlesChapters&target=default&startPage=0&sortBy=Earliest) through 2010, for [*Current Biology*](https://www.cell.com/action/doSearch?type=quicksearch&text1=sp.+nov.+fossil&field1=AllField&journalCode=curbio&SeriesKey=curbio&AfterYear=2000&BeforeYear=2025&pageSize=50&startPage=0&sortBy=Earliest) through 2006, and for [*PNAS*](https://www.pnas.org/action/doSearch?AllField=sp.+nov.+fossil&SeriesKey=pnas&AfterYear=1999&BeforeYear=2025&que2027=43%2F1780639119&sortBy=Earliest&startPage=&ConceptID=500110) through 2000. For all journals, only 'typical' research articles are included; formally designated 'reviews', errata, features, etc. are not included (not that they tend to be describing new species anyway).
+## Outputs
+| File | Description |
+|------|-------------|
 
-These assessments only capture information on new species, which are often, but hardly always, associated with a new genus. Standalone new genera for existing species (comb. nov.), new subgenera, new subspecies, or any new supra-generic rank are not recorded.
 
-### Article assessment
-I then examined each article manually and extracted basic information about novel taxa at the species level: journal, article title, publication year, DOI, taxon name, country the holotype was discovered in, and geologic era and period. In the few instances in which a species was described but uncertainly placed (indicated via a '?' or 'cf.' in front of the genus name), it was recorded as being in the genus without this to facilitate downstream processes. Two *Nature* articles were excluded, [Zeng et al., 2026](https://www.nature.com/articles/s41586-025-10030-0), which described a speciose Cambrian assemblage in which more than half of the >150 recognized species are considered new, as the authors did not formalize names for new species (probably due to Nature's page limits), and [Moore et al., 2024](https://www.nature.com/articles/s41586-024-07919-7), which is about a parasitoid wasp in modern *Drosophila*. One *Science* article was excluded, [Miao et al., 2022](https://doi.org/10.1126/science.abo2475), which improperly used 'sp. nov.' in reference to a species named in 2008 and which invokes no taxonomic act. Similar issues are found in JVP, Palaeontology, PNAS, and Current Biology articles but are too numerous to list here. JVP's search results also seem to return hits if 'sp. nov.' is in the references. Any article where a new species was not formalized was omitted in the downstream scripting process.
+## Requirements
+This workflow was developed and most recently run using VSCode v1.140.0, Python 3.14.3, and the following Python modules (hyperlinked to PyPi entry if not in standard library): *csv*, *datetime*, *glob*, *json*, *[matplotlib](https://pypi.org/project/matplotlib/)*, *[numpy](https://pypi.org/project/numpy/)*, *os*, *[pandas](https://pypi.org/project/pandas/)*, *[pyalex](https://pypi.org/project/pyalex/)*, *[pypandoc-binary](https://pypi.org/project/pypandoc-binary/)*, *re*, *[requests](https://pypi.org/project/requests/)*, and *[rich](https://pypi.org/project/rich/)*.
 
-### Taxonomic assessment
-In order to standardize how information about the taxonomic ranks of each novel taxon were treated, I utilized the [Paleobiology Database (PBDB) REST API](https://paleobiodb.org/data1.2/). This is not a perfect mechanism, and I am well-aware of the PBDB's limitations, but the only real alternative that could ensure coverage for all sampled taxa was Wikipedia - a lot of papers truncate the systematic paleontology or depict ranks not equivalent to those in other papers. A dynamic resource is also preferable to the original paper, as the taxonomy of some recently named taxa may have shifted to a different consensus over time. Note that some novel trace fossil ichnospecies are not categorized (their producer may be unknown).
-
-The PBDB doesn't always have data for taxa, so after retrieving information on the taxa that do, I used a combination of Wikipedia and the PBDB to identify slightly higher ranks (e.g., family) that might be listed in the PBDB. Anyone re-running the script would need to do the same manual steps for missing data. I also did some minor cleaning up to account for a few genera that needed to be replaced due to preoccupation, a weird frameshift in which the PBDB output was frameshifted by one somewhere in the middle of the merged dataframe (still trying to figure this out, but it has no functional import at this point), and changed 'United States' listings to 'United States of America' to prepare it for *geopandas* specifically.
-
-### Classification
-To make the plots slightly more comprehensible and more focused on disparities between clades, I created a series of Boolean columns based on whether a taxon was listed as belonging to a clade (e.g., 'Vertebrata') and then used those columns to create conditional categorizations (e.g., if a taxon was listed as a tetrapodomorph but not as an amniote, it is classifed as 'Amphibians and friends'). These categories are hardly asymmetrical, don't always hew to Linnaean ranks, are sometimes referring to paraphyletic clades, and will probably be tweaked in the future.
-
-### Future development
-This is just a fun side project for me, but it would be easy to either expand the temporal range for sampling journal articles (or maybe to just skip to a decade-long time bin from a few decades ago) or to expand the journal scope (e.g., Proc B, PNAS, Current Biology). If you find this interesting and want to contribute, feel free to fork (and make a PR if you want to merge back).
-
-#### Author assessment
-*still under development*
-In order to gain insight into trends by publishing authors on these papers, I utilized the [OpenAlex REST API](https://developers.openalex.org/). For those not familiar with the resource, OpenAlex is a freely available bibliographic resource that ingests and standardizes metadata from Crossref (the people who mint DOIs for journal articles) and DataCite (the people who mint DOIs for datasets and software). Information on ROR-standardized affiliations and country were extracted. For those not familiar with [ROR](https://ror.org/), this is a global registry of research institution names intended to mitigate problems of writing the same institution's name in many different ways (sort of like ORCID but for institutions). You technically do not need an [Open Alex API key](https://docs.openalex.org/how-to-use-the-api/rate-limits-and-authentication) for the type of analysis that this script does (querying individual DOIs rather than doing a large search), but I would still recommend getting one as a way of being polite about the requests you make. Plus, this might be a cool resource to investigate further if you ever do any bibliographic work, and then you might be using endpoints that do require a key.
-
-## Licensing of materials
-Metadata about journal publications and taxonomic classifications is typically regarded as non-creative and thus not eligible to be held in copyright. All data included here are thus treated as being in the public domain (CC0 license waiver). The code is licensed under MIT, which basically allows anyone to do anything with it as long as they credit the original (read the License file for more). The visualizations are creative, but I see no point in copyrighting them since anyone can regenerate them on their own with my code and dataset.
+### API requirements
+Currently, only the OpenAlex API requires an API token (free to obtain, free to use for unlimited single-DOI retrievals as is done here); see their [docs](https://help.openalex.org/api/) for more. Information on the Paleobiology Database API can be found [here](https://paleobiodb.org/#/resources); information on the Crossref API can be found [here](https://api.crossref.org/swagger-ui/index.html).
 
 ### Re-use and requirements
-Anyone should feel free to re-use and re-purpose these materials. If you make use of public APIs, please make sure to use best practices for making polite requests to REST APIs. You will need to install various Python modules not in the standard library: *geopandas*, *matplotlib*, *pandas* and *requests*. These are all standard, widely used modules available on PyPi. If you want to produce the map plots, you will need to get the shapefile from: [https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/](https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/).
+Anyone should feel free to re-use and re-purpose these materials per the requirements of the [MIT license](https://opensource.org/license/mit). If you make use of public APIs, please make sure to use best practices for making polite requests to REST APIs. 
 
 ## Version notes
+* **Version 2.0.0** is released through the Zenodo integration in tandem with the posting of the preprint.
 * **Version 1.1.0** provides updated data and the script for retrieving metadata on articles.
 * **Version 1.0.1** fixes two data entry bugs that did not exert significant impact on initial graphs. Assessment of two other tickets concluded that they are not currently issues.
