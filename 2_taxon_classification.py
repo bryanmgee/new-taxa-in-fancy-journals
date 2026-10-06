@@ -23,7 +23,7 @@ except ValueError:
 ## Currently, there are 71 maximum ranks
 rank_columns = df.loc[:, '0':'70'].columns
 
-ranks = ['Problematica', 'Eukaryota', 'Plantae', 'Fungi', 'Prokaryota', 'Protozoa', 'Chromalveolata', 'Animalia', 'Bilateria', 'Cyclostomi', 'Deuterostomia', 'Protostomia', 'Lophophorata', 'Mollusca', 'Panarthropoda', 'Insecta', 'Chordata', 'Vertebrata', 'Gnathostomata', 'Actinopterygii', 'Sarcopterygii', 'Chondrichthyes', 'Tetrapodomorpha', 'Tetrapoda', 'Amphibia', 'Amniota', 'Lepidosauromorpha', 'Archosauromorpha', 'Pantestudines', 'Pseudosuchia', 'Avemetatarsalia', 'Dinosauromorpha', 'Dinosauria', 'Ornithischia', 'Saurischia', 'Theropoda', 'Mammaliamorpha', 'Mammaliaformes', 'Mammalia', 'Marsupialiformes', 'Placentalia', 'Primates', 'Theria', 'Avialae', 'Aves']
+ranks = ['Plantae', 'Fungi', 'Animalia', 'Bilateria', 'Cyclostomi', 'Deuterostomia', 'Lophophorata', 'Mollusca', 'Panarthropoda', 'Insecta', 'Chordata', 'Vertebrata', 'Actinopterygii', 'Chondrichthyes', 'Tetrapodomorpha', 'Amphibia', 'Amniota', 'Lepidosauromorpha', 'Pantestudines', 'Pseudosuchia', 'Avemetatarsalia', 'Mammaliamorpha','Primates', 'Avialae', 'Aves']
 for rank in ranks:
     df[rank] = df[rank_columns].apply(lambda row: rank in row.values, axis=1)
 
@@ -79,5 +79,10 @@ unclassified = df['classification'].isna().sum()
 print(f'Number of unclassified taxa: {unclassified} (includes multi-species genera).\n')
 
 df.to_csv(f'{outputs_dir}/{today}_dataset-classified.csv', index=False, encoding='utf-8-sig')
+
+## Summary counts for each category by journal
+## Quick counts
+journal_counts = df.groupby('journal')['classification'].value_counts()
+journal_counts.to_csv(f'{outputs_dir}/{today}_journal-category-count.csv')
 
 print('Taxonomic re-classification concluded.\n')

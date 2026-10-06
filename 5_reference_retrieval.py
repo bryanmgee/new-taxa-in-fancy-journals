@@ -71,7 +71,7 @@ for article in results:
     doi = item.get('DOI', None)
     title_field = item.get('title', [])
     title = title_field[0] if title_field else None
-    volume = item.get('volume', 'No volume')
+    volume = item.get('volume', '(Ahead of print)')
     issue_field = item.get('journal-issue', None)
     issue = issue_field.get('issue', None) if issue_field else None
     article = item.get('article-number', None)
