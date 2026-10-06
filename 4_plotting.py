@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from scipy import stats
 
+#######################################################
+###                 DATA PREPARATION                ###
+#######################################################
+
 # Read in cleaned-up data files
 outputs_dir = 'outputs'
 today = datetime.now().strftime('%Y%m%d') 
@@ -58,7 +62,7 @@ names_dict = {
     'Palaeontology': 'Palaeontology',
     'Papers in Palaeontology': 'Pap. Palaeontol.'
 }
-## Replace journal names
+## Replace journal names with abbreviations
 df_classified['journal'] = df_classified['journal'].replace(names_dict)
 
 # Create plots and summaries directories
@@ -89,9 +93,7 @@ legend_font = 9
 alpha = 0.8
 bg_col = '#F8F8F8'
 
-#################################################
-###                 COLOR MAPS                ###
-#################################################
+##### ----- COLOR MAPS ----- #####
 
 # Create color maps
 ## Color map for all 20 categories
@@ -134,7 +136,6 @@ color_mapping = {
 color_mapping_geo = {val: color_mapping.get(val, default_color) for val in df_classified['geography']}
 
 ## Color map for journals
-### Based on Okabe-Ito
 ### Currently by journal group but can be parsed to different one per journal in this format
 color_mapping_journals = {
     'Nature': "#E69F00",
@@ -152,9 +153,7 @@ color_mapping_journals = {
     'Pap. Palaeontol.': '#0072B2'
 }
 
-#################################################
-###                 DATAFRAMES                ###
-#################################################
+##### ----- CREATE SUBSETTED DATAFRAMES ----- #####
 
 # Subset df by journal group
 tier1 = ['Nature', 'Science']
@@ -252,7 +251,10 @@ genera_counts['percentage'] = (genera_counts['count'] / len(genera_unique)) * 10
 papers_unique = df_classified.drop_duplicates(subset=['doi'], keep='first')
 papers_counts = papers_unique['journal'].value_counts().reset_index(name='count')
 
-############# SUMMARY PRINT STATEMENTS ##################
+###################################################
+###                 SUMMARY FILE                ###
+###################################################
+
 print('Writing text summary file.\n')
 now = datetime.now()
 
@@ -300,8 +302,9 @@ with open(f'{summaries_dir}/{today}_summary.txt', 'w') as file:
 ###             PLOTS                    ###
 ############################################
 
-##### Full dataset (no filtering) #####
+##### ----- FULL DATASET (NO FILTERING) ----- #####
 print(f'Creating graphs for full dataset.\n')
+
 # By category
 all_counts = df_classified['classification'].value_counts().reindex(cat_order, fill_value=0).reset_index(name='count')
 all_counts['percentage'] = (all_counts['count'] / len(df_classified)) * 100
@@ -314,10 +317,10 @@ ax.barh(all_counts['classification'], all_counts['percentage'], color=[color_map
 for i, pct in enumerate(all_counts['percentage']):
     ax.text(pct, i, f' {pct:.1f}%', ha='left', va='center', fontsize=label_font)
 
+ax.set_title('Category distribution of new species (all journals)', fontsize=title_font, fontweight='bold')
 ax.set_yticks(all_counts['classification'])
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
-ax.set_title('Category distribution of new species (all journals)', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.set_axisbelow(True)
 ax.set_xlim(0, all_counts['percentage'].max() * 1.5)
@@ -328,7 +331,7 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-# By age
+# By time period
 all_ages = df_classified['age2'].value_counts().reindex(age_order, fill_value=0).reset_index(name='count')
 all_ages['percentage'] = (all_ages['count'] / len(df_classified)) * 100
 
@@ -340,10 +343,10 @@ ax.barh(all_ages['age2'], all_ages['percentage'], color=[color_mapping_ages[x] f
 for i, pct in enumerate(all_ages['percentage']):
     ax.text(pct, i, f' {pct:.1f}%', ha='left', va='center', fontsize=label_font)
 
+ax.set_title('Time period distribution of new species (all journals)', fontsize=title_font, fontweight='bold')
 ax.set_yticks(all_ages['age2'])
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
-ax.set_title('Time period distribution of new species (all journals)', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.set_axisbelow(True)
 ax.set_xlim(0, all_ages['percentage'].max() * 1.5)
@@ -357,7 +360,6 @@ plt.close(fig)
 # By country
 all_countries = df_classified['geography'].value_counts().reset_index(name='count')
 all_countries['percentage'] = (all_countries['count'] / len(df_classified)) * 100
-
 ## Restrict to top X
 cut = 20
 all_countries = all_countries.head(cut)
@@ -370,10 +372,10 @@ ax.barh(all_countries['geography'], all_countries['percentage'], color=[color_ma
 for i, pct in enumerate(all_countries['percentage']):
     ax.text(pct, i, f' {pct:.1f}%', ha='left', va='center', fontsize=label_font)
 
+ax.set_title(f'Geographic distribution of new species (top {cut}, all journals)', fontsize=title_font, fontweight='bold')
 ax.set_yticks(all_countries['geography'])
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
-ax.set_title(f'Geographic distribution of new species (top {cut}, all journals)', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.set_axisbelow(True)
 ax.set_xlim(0, all_countries['percentage'].max() * 1.5)
@@ -385,12 +387,12 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-##### Recursive plots #####
+##### ----- GROUP-SPECIFIC PLOTS ----- #####
 
 for name, tier in dfs_dict.items():
 
-    ##### ------------ Groups ------------  #####
-    ####### ------------ Journals parsed within tier ------------  #######
+    # By category
+    ## Journals separated within group
     print(f'Creating graphs for {name} journals.\n')
     plot_filename = f'{today}_{name}_groups_separate.{plot_format}'
     if tier == tier1:
@@ -411,9 +413,9 @@ for name, tier in dfs_dict.items():
         for i, pct in enumerate(groups['percentage']):
             ax.text(pct, i, f' {pct:.1f}%', ha='left', va='center', fontsize=(label_font-1))
 
+        ax.set_title(journal, fontsize=title_font, style='italic')
         ax.set_yticklabels([])
         ax.set_ylabel('', fontsize=axis_font)
-        ax.set_title(journal, fontsize=title_font, style='italic')
         ax.tick_params(labelsize=tick_font)
         ax.set_facecolor(bg_col)
         ax.set_xlim(0, 45)
@@ -426,26 +428,25 @@ for name, tier in dfs_dict.items():
                     ax.plot([1, 2, 3], [4, 5, 6])
                     ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 
-    # Conditionally remove excessive x-axis titles
+    ### Conditionally remove excessive x-axis titles
     if tier != tier1:
         axs[0, 0].set_xlabel('')
         axs[0, 1].set_xlabel('')
         axs[1, 0].set_xlabel('')
         axs[1, 1].set_xlabel('')
 
-    # Conditionally drop blank subplot for control group (n=5)
+    ### Conditionally drop blank subplot for control group (n=5)
     if name == 'Control':
         for j in range(len(control), len(axs_flat)):
             fig.delaxes(axs_flat[j])
 
     plt.subplots_adjust(wspace=0.3)
     plt.tight_layout()
-    # plt.show()
     plot_path = os.path.join(plots_dir, plot_filename)
     plt.savefig(plot_path, format=plot_format, dpi=dpi)
     plt.close(fig)
 
-    ### Testing stacked bar as alternate version
+    ## Stacked bar as alternate
     df_subset = df_classified[df_classified['journal'].isin(tier)]
     per_journal_count = df_subset.groupby(['journal', 'classification']).size().reset_index(name='count')
     per_journal_count['classification'] = pd.Categorical(per_journal_count['classification'], categories=cat_order, ordered=True)
@@ -469,12 +470,12 @@ for name, tier in dfs_dict.items():
         fig, ax = plt.subplots(figsize=(img_width, img_height))
 
     pivot_pct.plot(kind='barh', stacked=True, ax=ax, color=color_mapping_groups, edgecolor='black', linewidth=0.5)
-
+    
+    ax.set_title('Category and journal distribution of new species', fontsize=title_font, fontweight='bold')
     ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
     ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
     for label in ax.get_yticklabels():
         label.set_fontstyle('italic')
-    ax.set_title('Category and journal distribution of new species', fontsize=title_font, fontweight='bold')
     ax.tick_params(labelsize=tick_font)
     ax.legend(title='', bbox_to_anchor=(0.38, -0.15), loc='upper center', fontsize=legend_font, ncol=2)
     ax.grid(axis='x', alpha=alpha, linestyle='--')
@@ -485,7 +486,7 @@ for name, tier in dfs_dict.items():
     plt.savefig(plot_path, format=plot_format, dpi=dpi)
     plt.close(fig)
 
-    ####### ------------ Journals combined within tier ------------  #######
+    ## Journals combined within group
     plot_filename = f'{today}_{name}_groups_grouped.{plot_format}'
 
     tier_df = df_classified[df_classified['journal'].isin(tier)]
@@ -499,10 +500,10 @@ for name, tier in dfs_dict.items():
     for i, pct in enumerate(tier_counts['percentage']):
         ax.text(pct, i, f' {pct:.1f}%', ha='left', va='center', fontsize=label_font)
 
+    ax.set_title(f'Category distribution of new species ({name})', fontsize=title_font, fontweight='bold')
     ax.set_yticks(tier_counts['classification'])
     ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
     ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
-    ax.set_title(f'Category distribution of new species ({name})', fontsize=title_font, fontweight='bold')
     ax.tick_params(labelsize=tick_font)
     ax.set_axisbelow(True)
     ax.set_xlim(0, 30)
@@ -577,8 +578,8 @@ for name, tier in dfs_dict.items():
         plt.close(fig)
         
 
-    ##### ------------ Ages ------------  #####
-    ####### ------------ Journals parsed within tier ------------  #######
+    # By time period
+    ## Journals separated within group
     plot_filename = f'{today}_{name}_ages_separate.{plot_format}'
 
     if tier == tier1:
@@ -617,7 +618,7 @@ for name, tier in dfs_dict.items():
     plt.savefig(plot_path, format=plot_format, dpi=dpi)
     plt.close(fig)
 
-    ### Testing stacked bar as alternate version
+    ## Testing stacked bar as alternate version
     df_subset = df_classified[df_classified['journal'].isin(tier)]
     per_journal_count = df_subset.groupby(['journal', 'age2']).size().reset_index(name='count')
     per_journal_count['age2'] = pd.Categorical(per_journal_count['age2'], categories=age_order, ordered=True)
@@ -642,11 +643,11 @@ for name, tier in dfs_dict.items():
 
     pivot_pct.plot(kind='barh', stacked=True, ax=ax, color=color_mapping_ages, edgecolor='black', linewidth=0.5)
 
+    ax.set_title('Time period and journal distribution of new species', fontsize=title_font, fontweight='bold')
     ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
     ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
     for label in ax.get_yticklabels():
         label.set_fontstyle('italic')
-    ax.set_title('Time period and journal distribution of new species', fontsize=title_font, fontweight='bold')
     ax.tick_params(labelsize=tick_font)
     ax.legend(title='', bbox_to_anchor=(0.38, -0.15), loc='upper center', fontsize=legend_font, ncol=2)
     ax.grid(axis='x', alpha=alpha, linestyle='--')
@@ -657,7 +658,7 @@ for name, tier in dfs_dict.items():
     plt.savefig(plot_path, format=plot_format, dpi=dpi)
     plt.close(fig)
 
-    ####### ------------ Journals combined within tier ------------  #######
+    ## Journals combined within group
     plot_filename = f'{today}_{name}_ages_grouped.{plot_format}'
     
     tier_df = df_classified[df_classified['journal'].isin(tier)]
@@ -671,10 +672,10 @@ for name, tier in dfs_dict.items():
     for i, pct in enumerate(tier_counts['percentage']):
         ax.text(pct, i, f' {pct:.1f}%', ha='left', va='center', fontsize=label_font)
 
+    ax.set_title(f'Time period distribution of new species ({name})', fontsize=title_font, fontweight='bold')
     ax.set_yticks(tier_counts['age2'])
     ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
     ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
-    ax.set_title(f'Time period distribution of new species ({name})', fontsize=title_font, fontweight='bold')
     ax.tick_params(labelsize=tick_font)
     ax.set_axisbelow(True)
     ax.set_xlim(0, 45)
@@ -685,8 +686,8 @@ for name, tier in dfs_dict.items():
     plt.savefig(plot_path, format=plot_format, dpi=dpi)
     plt.close(fig)
 
-    ##### ------------ Countries ------------  #####
-    ####### ------------ Journals parsed within tier ------------  #######
+    # By geography
+    ## Journals separated within group
     plot_filename = f'{today}_{name}_countries_separate.{plot_format}'
 
     if tier == tier1:
@@ -729,7 +730,7 @@ for name, tier in dfs_dict.items():
     plt.savefig(plot_path, format=plot_format, dpi=dpi)
     plt.close(fig)
 
-    ####### ------------ Journals combined within tier ------------  #######
+    ## Journals combined within group
     plot_filename = f'{today}_{name}_countries_grouped.{plot_format}'
     
     tier_df = df_classified[df_classified['journal'].isin(tier)]
@@ -759,15 +760,13 @@ for name, tier in dfs_dict.items():
     plt.savefig(plot_path, format=plot_format, dpi=dpi)
     plt.close(fig)
 
-###############################################
-#### ---------- ONE-OFF GRAPHS ---------- #####
-###############################################
-
+##### ----- ONE-OFF GRAPHS ----- ######
 print('Creating singleton graphs.\n')
 
-##### ---------- PBDB graphs ---------- #####
+# PBDB graphs
 print('Creating PBDB graphs.\n')
 
+## Missing categories by percent
 plot_filename = f'{today}_pbdb-missing_groups_percent.{plot_format}'
 fig, ax = plt.subplots(figsize=(img_width, img_height))
 
@@ -776,10 +775,10 @@ ax.barh(pbdb_counts['classification'], pbdb_counts['percentage'], color=[color_m
 for i, pct in enumerate(pbdb_counts['percentage']):
     ax.text(pct, i, f' {pct:.1f}%', ha='left', va='center', fontsize=label_font)
 
+ax.set_title('Category distribution of new species', fontsize=title_font, fontweight='bold')
 ax.set_yticks(pbdb_counts['classification'])
 ax.set_xlabel('Percent of genera', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
-ax.set_title('Category distribution of new species', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.set_axisbelow(True)
 ax.set_xlim(0, pbdb_counts['percentage'].max() * 1.5)
@@ -790,6 +789,7 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
+## Missing categories by count
 plot_filename = f'{today}_pbdb-missing_groups_count.{plot_format}'
 fig, ax = plt.subplots(figsize=(img_width, img_height))
 
@@ -798,10 +798,10 @@ ax.barh(pbdb_counts['classification'], pbdb_counts['count'], color=[color_mappin
 for i, pct in enumerate(pbdb_counts['count']):
     ax.text(pct, i, f' {pct:.1f}', ha='left', va='center', fontsize=label_font)
 
+ax.set_title('Category distribution of genera', fontsize=title_font, fontweight='bold')
 ax.set_yticks(pbdb_counts['classification'])
 ax.set_xlabel('Number of genera', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
-ax.set_title('Category distribution of genera', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.set_axisbelow(True)
 ax.set_xlim(0, pbdb_counts['count'].max() * 1.5)
@@ -817,6 +817,7 @@ merged_df = merged_df.rename(columns={'count_x': 'count_all', 'percentage_x': 'p
 merged_df['difference'] = merged_df['percentage_pbdb'] - merged_df['percentage_all']
 merged_df['magnitude'] = merged_df['difference'] / merged_df['percentage_all']
 
+## Missing categories by percent difference
 plot_filename = f'{today}_pbdb_groups_differential.{plot_format}'
 
 fig, ax = plt.subplots(figsize=(img_width, img_height))
@@ -828,10 +829,10 @@ for i, pct in enumerate(merged_df['difference']):
     x_pos = pct + 0.1 if pct > 0 else pct - 0.15
     ax.text(x_pos, i, f' {pct:.1f}%', ha=position, va='center', fontsize=label_font)
 
+ax.set_title(f'Comparison of proportions (in PBDB vs. not in PBDB)', fontsize=title_font, fontweight='bold')
 ax.set_yticks(merged_df['classification'])
 ax.set_xlabel('Percent difference', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
-ax.set_title(f'Comparison of proportions (in PBDB vs. not in PBDB)', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.set_axisbelow(True)
 ax.set_xlim(-25, 25)
@@ -843,6 +844,7 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
+## Missing categories by percent between journals
 plot_filename = f'{today}_pbdb-missing_dois_percent_inter.{plot_format}'
 fig, ax = plt.subplots(figsize=(img_width, img_height))
 
@@ -851,12 +853,12 @@ ax.barh(missing_doi_count['journal'], missing_doi_count['percentage'], color=[co
 for i, pct in enumerate(missing_doi_count['percentage']):
     ax.text(pct, i, f' {pct:.1f}%', ha='left', va='center', fontsize=label_font)
 
+ax.set_title('Proportion of new species with missing genera', fontsize=title_font, fontweight='bold')
 ax.set_yticks(missing_doi_count['journal'])
 ax.set_xlabel('Percent of articles', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
 for label in ax.get_yticklabels():
     label.set_fontstyle('italic')
-ax.set_title('Proportion of new species with missing genera', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.set_axisbelow(True)
 ax.set_xlim(0, missing_doi_count['percentage'].max() * 1.5)
@@ -872,6 +874,7 @@ merged_df = merged_df.rename(columns={'count_x': 'count_all', 'count_y': 'count_
 merged_df['percentage_all'] = (merged_df['count_missing'] / merged_df['count_all']) * 100
 merged_df = merged_df.sort_values(by='percentage_all', ascending=True)
 
+## Missing categories by percent within journals
 plot_filename = f'{today}_pbdb-missing_dois_percent_intra.{plot_format}'
 fig, ax = plt.subplots(figsize=(img_width, img_height))
 
@@ -896,7 +899,7 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-##### ---------- Myanmar amber graphs ---------- #####
+# Myanmar amber graphs
 df_myanmar = df_classified[df_classified['geography'] == 'Myanmar']
 print(f'There are {len(df_myanmar)} species from Myanmar.\n')
 
@@ -955,7 +958,7 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-## By time
+## By year of publication
 years_order = list(range(2000, 2027))
 myanmar_years = df_myanmar['year'].value_counts().reindex(years_order, fill_value=0).reset_index(name='count')
 
@@ -979,14 +982,11 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-# ########################## CLADE-BASED SUMMARIES AND GRAPHS ################################
+# Clade-based summaries
 
-
-
-
-# ##################
-# ### ARTHROPODA ###
-# ##################
+##################
+### ARTHROPODA ###
+##################
 
 # Additional ranks to add
 ranks = ['Deuteropoda', 'Radiodonta', 'Trilobita', 'Chelicerata', 'Arachnida', 'Ostracoda', 'Decapoda']
@@ -1009,6 +1009,7 @@ condition = (df_arthropoda['Decapoda'] == True)
 df_arthropoda.loc[condition, 'classification_arth'] = 'Decapods'
 condition = (df_arthropoda['Insecta'] == True)
 df_arthropoda.loc[condition, 'classification_arth'] = 'Insects'
+
 ## Catch-all for anything remaining
 condition = (df_arthropoda['Deuteropoda'] == True) & (df_arthropoda['classification_arth'].isna())
 df_arthropoda.loc[condition, 'classification_arth'] = 'Other deuteropods'
@@ -1034,12 +1035,11 @@ fig, ax = plt.subplots(figsize=(img_width, img_height))
 
 pivot_pct.plot(kind='barh', stacked=True, ax=ax, color=colors_arth, edgecolor='black', linewidth=0.5)
 
-# Labels, etc.
+ax.set_title('Relative proportion of Pan-Arthropoda by journal', fontsize=title_font, fontweight='bold')
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
 for label in ax.get_yticklabels():
     label.set_fontstyle('italic')
-ax.set_title('Relative proportion of Pan-Arthropoda by journal', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.legend(title='', bbox_to_anchor=(0.38, -0.15), loc='upper center', fontsize=legend_font, ncol=2)
 ax.grid(axis='x', alpha=alpha, linestyle='--')
@@ -1050,9 +1050,9 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-# ###############
-# ### INSECTA ###
-# ###############
+###############
+### INSECTA ###
+###############
 
 # Additional ranks to add
 ranks = ['Archaeognatha', 'Hydropalaeoptera', 'Polyneoptera', 'Lepidoptera', 'Coleoptera', 'Hemiptera', 'Hymenoptera', 'Diptera', 'Antliophora', 'Panorpida', 'Neuroptera', 'Neoneuroptera', 'Myrmeleontiformia']
@@ -1085,6 +1085,7 @@ condition = (df_insecta['Neoneuroptera'] == True) & (df_insecta['classification_
 df_insecta.loc[condition, 'classification_insect'] = 'Other neoneuropterans'
 condition = (df_insecta['Neuroptera'] == True) & (df_insecta['classification_insect'].isna())
 df_insecta.loc[condition, 'classification_insect'] = 'Other neuropterans'
+
 ## Catch-all for anything remaining
 condition = (df_insecta['classification_insect'].isna())
 df_insecta.loc[condition, 'classification_insect'] = 'Other insects'
@@ -1110,12 +1111,11 @@ fig, ax = plt.subplots(figsize=(img_width, img_height))
 
 pivot_pct.plot(kind='barh', stacked=True, ax=ax, color=colors_arth, edgecolor='black', linewidth=0.5)
 
-# Labels, etc.
+ax.set_title('Relative proportion of Insecta by journal', fontsize=title_font, fontweight='bold')
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
 for label in ax.get_yticklabels():
     label.set_fontstyle('italic')
-ax.set_title('Relative proportion of Insecta by journal', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.legend(title='', bbox_to_anchor=(0.38, -0.15), loc='upper center', fontsize=legend_font, ncol=2)
 ax.grid(axis='x', alpha=alpha, linestyle='--')
@@ -1126,9 +1126,9 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-# ######################
-# ### MAMMALIAMORPHA ###
-# ######################
+######################
+### MAMMALIAMORPHA ###
+######################
 
 # Additional ranks to add
 ranks = ['Mammalia', 'Eutriconodonta', 'Allotheria', 'Multituberculata', 'Metatheria', 'Monotremata', 'Placentalia', 'Afrotheria', 'Carnivora', 'Xenarthra', 'Euungulata', 'Chiroptera', 'Rodentia']
@@ -1165,6 +1165,7 @@ condition = (df_mammal['Placentalia'] == True) & (df_mammal['classification_mamm
 df_mammal.loc[condition, 'classification_mamm'] = 'Other placental mammals'
 condition = (df_mammal['Mammalia'] == True) & (df_mammal['classification_mamm'].isna())
 df_mammal.loc[condition, 'classification_mamm'] = 'Other non-placental mammals'
+
 ## Catch-all for anything remaining
 condition = (df_mammal['classification_mamm'].isna())
 df_mammal.loc[condition, 'classification_mamm'] = 'Other'
@@ -1190,12 +1191,11 @@ fig, ax = plt.subplots(figsize=(img_width, img_height))
 
 pivot_pct.plot(kind='barh', stacked=True, ax=ax, color=colors_mamm, edgecolor='black', linewidth=0.5)
 
-# Labels, etc.
+ax.set_title('Relative proportion of Mammaliamorpha by journal', fontsize=title_font, fontweight='bold')
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
 for label in ax.get_yticklabels():
     label.set_fontstyle('italic')
-ax.set_title('Relative proportion of Mammaliamorpha by journal', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.legend(title='', bbox_to_anchor=(0.38, -0.15), loc='upper center', fontsize=legend_font, ncol=2)
 ax.grid(axis='x', alpha=alpha, linestyle='--')
@@ -1240,6 +1240,7 @@ condition = (df_avemet['Theropoda'] == True) & (df_avemet['classification_avemet
 df_avemet.loc[condition, 'classification_avemet'] = 'Saurischia (non-avian theropods)'
 condition = (df_avemet['Saurischia'] == True) & (df_avemet['classification_avemet'].isna())
 df_avemet.loc[condition, 'classification_avemet'] = 'Saurischia (other)'
+
 ## Catch-all for anything remaining
 condition = (df_avemet['classification_avemet'].isna())
 df_avemet.loc[condition, 'classification_avemet'] = 'Other non-dinosaurs'
@@ -1265,12 +1266,11 @@ fig, ax = plt.subplots(figsize=(img_width, img_height))
 
 pivot_pct.plot(kind='barh', stacked=True, ax=ax, color=colors_avemet, edgecolor='black', linewidth=0.5)
 
-# Labels, etc.
+ax.set_title('Relative proportion of Avemetatarsalia by journal', fontsize=title_font, fontweight='bold')
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
 for label in ax.get_yticklabels():
     label.set_fontstyle('italic')
-ax.set_title('Relative proportion of Avemetatarsalia by journal', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.legend(title='', bbox_to_anchor=(0.38, -0.15), loc='upper center', fontsize=legend_font, ncol=2)
 ax.grid(axis='x', alpha=alpha, linestyle='--')
@@ -1281,9 +1281,9 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-# ##################
-# ### AMPHIBIANS ###
-# ##################
+##################
+### AMPHIBIANS ###
+##################
 
 # Additional ranks to add
 ranks = ['Tetrapoda', 'Lissamphibia', 'Temnospondyli']
@@ -1296,6 +1296,7 @@ condition = (df_amphibian['Tetrapoda'] == False)
 df_amphibian.loc[condition, 'classification_amphib'] = 'Stem tetrapods'
 condition = (df_amphibian['Temnospondyli'] == True) & (df_amphibian['Lissamphibia'] == False)
 df_amphibian.loc[condition, 'classification_amphib'] = 'Non-lissamphibian temnospondyls'
+
 ## Catch-all for anything remaining
 condition = (df_amphibian['classification_amphib'].isna())
 df_amphibian.loc[condition, 'classification_amphib'] = 'Other early tetrapods'
@@ -1321,12 +1322,11 @@ fig, ax = plt.subplots(figsize=(img_width, img_height))
 
 pivot_pct.plot(kind='barh', stacked=True, ax=ax, color=colors_amphib, edgecolor='black', linewidth=0.5, alpha=alpha)
 
-# Labels, etc.
+ax.set_title('Relative proportion of "amphibians" by journal', fontsize=title_font, fontweight='bold')
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
 for label in ax.get_yticklabels():
     label.set_fontstyle('italic')
-ax.set_title('Relative proportion of "amphibians" by journal', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.legend(title='', bbox_to_anchor=(0.38, -0.15), loc='upper center', fontsize=legend_font, ncol=2)
 ax.grid(axis='x', alpha=alpha, linestyle='--')
@@ -1337,9 +1337,9 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-# ##################
-# ### OTHER ###
-# ##################
+#############
+### OTHER ###
+#############
 
 # Additional ranks to add
 ranks = ['Acritarcha', 'Annelida', 'Cyanobacteria', 'Protozoa', 'Dinoflagellata', 'Foraminifera', 'Chaetognatha', 'Priapulida', 'Radiolaria', 'Radiozoa', 'Temnospondyli']
@@ -1394,12 +1394,11 @@ fig, ax = plt.subplots(figsize=(img_width, img_height))
 
 pivot_pct.plot(kind='barh', stacked=True, ax=ax, color=colors_other, edgecolor='black', linewidth=0.5, alpha=alpha)
 
-# Labels, etc.
+ax.set_title('Relative proportion of "Other" species by journal', fontsize=title_font, fontweight='bold')
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
 for label in ax.get_yticklabels():
     label.set_fontstyle('italic')
-ax.set_title('Relative proportion of "Other" species by journal', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.legend(title='', bbox_to_anchor=(0.38, -0.15), loc='upper center', fontsize=legend_font, ncol=2)
 ax.grid(axis='x', alpha=alpha, linestyle='--')
@@ -1433,21 +1432,22 @@ pivot_df = journals_by_cat_5.pivot(index='journal', columns='classification_cons
 pivot_df = pivot_df.sort_index(ascending=False)
 journal_order = ['Nature', 'Science', 'Curr. Biol.', 'Gondwana Res.', 'Nat. Commun.', 'Nat. Ecol. Evol.', 'Proc. Natl. Acad. Sci. U.S.A.', 'Sci. Adv.', 'J. Paleontol.', 'J. Syst. Palaeontol.', 'J. Vert. Paleontol.', 'Palaeontology', 'Pap. Palaeontol.']
 pivot_df = pivot_df.loc[journal_order[::-1]]
-# Calculate percentages (relative counts)
+
 pivot_pct = pivot_df.div(pivot_df.sum(axis=1), axis=0) * 100
-# Set order
+
 cat_order = ['Avians', 'Non-avian avemetatarsalians', 'Primates', 'Non-primate mammaliamorphs', 'Other']
 pivot_pct = pivot_pct[cat_order]
 
+## Stacked bar
 plot_filename = f'{today}_5-cat_relative-proportions.{plot_format}'
 fig, ax = plt.subplots(figsize=(img_width, img_height))
 pivot_pct.plot(kind='barh', stacked=True, ax=ax, color=colors_5, edgecolor='black', linewidth=0.5)
 
+ax.set_title('Relative proportion of charismatic groups by journal', fontsize=title_font, fontweight='bold')
 ax.set_xlabel('Percent of new species', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
 for label in ax.get_yticklabels():
     label.set_fontstyle('italic')
-ax.set_title('Relative proportion of charismatic groups by journal', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.legend(title='', bbox_to_anchor=(0.38, -0.15), loc='upper center', fontsize=legend_font, ncol=2)
 ax.grid(axis='x', alpha=alpha, linestyle='--')
@@ -1458,8 +1458,8 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-
-# Create df with JIFs
+## Scatterplot
+### Create df with JIFs
 jifs = {
     'journal': ['Nature', 'Science', 'Curr. Biol.', 'Gondwana Res.', 'Nat. Commun.', 'Nat. Ecol. Evol.', 'Proc. Natl. Acad. Sci. U.S.A.', 'Sci. Adv.', 'J. Paleontol.', 'J. Syst. Palaeontol.', 'J. Vert. Paleontol.', 'Palaeontology', 'Pap. Palaeontol.'],
     'jif': [56.1, 47.3, 7.7, 8.9, 18.1, 17.1, 9.5, 13.9, 1.3, 2.9, 1.9, 3.2, 2.4]
@@ -1475,7 +1475,7 @@ colors = journals_merged['journal'].map(color_mapping_journals)
 
 plot_filename = f'{today}_journals_charismatic-against-JIF.{plot_format}'
 fig, axs = plt.subplots(1, 2, sharex=True, figsize=(img_width, img_height))
-# Shared title and x-axis title
+#### Shared title and x-axis title
 fig.suptitle('Comparison of percent charismatic against JIF', fontsize=title_font)
 fig.supxlabel('log10-transformed Journal Impact Factor (JIF)', ha='center', va='bottom', fontsize=axis_font, fontweight='bold')
 axs[0].scatter(journals_merged['log_jif'], journals_merged['Charismatic'], color=colors, s=75)
@@ -1484,7 +1484,7 @@ axs[0].grid(axis='both', alpha=alpha, linestyle='--')
 axs[0].set_axisbelow(True)
 axs[0].set_facecolor(bg_col)
 
-# Add trendline
+#### Add trendline
 coefficients1 = np.polyfit(journals_merged['log_jif'], journals_merged['Charismatic'], deg=1)
 trendline_equation1 = np.poly1d(coefficients1)
 x_sorted1 = np.sort(journals_merged['log_jif'])
@@ -1504,7 +1504,7 @@ axs[1].grid(axis='both', alpha=alpha, linestyle='--')
 axs[1].set_axisbelow(True)
 axs[1].set_facecolor(bg_col)
 
-# Add trendline
+#### Add trendline
 coefficients = np.polyfit(journals_merged_no_jvp['log_jif'], journals_merged_no_jvp['Charismatic'], deg=1)
 trendline_equation = np.poly1d(coefficients)
 x_sorted = np.sort(journals_merged_no_jvp['log_jif'])
@@ -1514,24 +1514,14 @@ r2_value = r_value ** 2
 print(r2_value)
 
 labels = ['A', 'B']
-for ax, label in zip(axs.flat, labels):
-    ax.text(
-        -0.1,
-        1.02,
-        label,
-        transform=ax.transAxes,
-        fontsize=11,
-        fontweight='bold',
-        va='top',
-        ha='right',
-    )
+for ax, label in zip(axs.flat, labels): ax.text(-0.1, 1.02, label, transform=ax.transAxes, fontsize=title_font, fontweight='bold', va='top', ha='right')
 
 plt.tight_layout()
 plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-# ####################### multi-species vs. single-species descriptions ###############
+# Single-species vs. multi-species descriptions
 single = []
 multiple = []
 journals = []
@@ -1565,6 +1555,7 @@ journal_order = ['Nature', 'Science', 'Curr. Biol.', 'Gondwana Res.', 'Nat. Comm
 df_species['journal'] = pd.Categorical(df_species['journal'], categories=reversed(journal_order), ordered=True)
 df_species = df_species.sort_values(by='journal')
 
+# Bar graph
 plot_filename = f'{today}_journals_multi-species.{plot_format}'
 fig, ax = plt.subplots(figsize=(img_width, img_height))
 
@@ -1573,12 +1564,12 @@ ax.barh(df_species['journal'], df_species['percent_multiple'], color=[color_mapp
 for i, pct in enumerate(df_species['percent_multiple']):
     ax.text(pct, i, f' {pct:.1f}%', ha='left', va='center', fontsize=label_font)
 
+ax.set_title('Proportion of articles with multiple new species', fontsize=title_font, fontweight='bold')
 ax.set_yticks(df_species['journal'])
 ax.set_xlabel('Percent of articles', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
 for label in ax.get_yticklabels():
     label.set_fontstyle('italic')
-ax.set_title('Proportion of articles with multiple new species', fontsize=title_font, fontweight='bold')
 ax.tick_params(labelsize=tick_font)
 ax.set_axisbelow(True)
 ax.set_xlim(0, df_species['percent_multiple'].max() * 1.5)
@@ -1589,7 +1580,7 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-# Drop JVP from next graph due to vert-only focus
+## Drop JVP from next graph due to vert-only focus
 df_species_invert = df_species.drop(df_species[df_species['journal'] == 'J. Vert. Paleontol.'].index)
 color_mapping_journals_12 = {key: val for key, val in color_mapping_journals.items() if key != 'J. Vert. Paleontol.'}
 colors = df_species_invert['journal'].map(color_mapping_journals_12)
@@ -1605,7 +1596,7 @@ ax.set_axisbelow(True)
 ax.set_facecolor(bg_col)
 ax.set_ylim(0, 50)
 
-# Add trendline
+## Add trendline
 coefficients = np.polyfit(df_species_invert['percent_invert'], df_species_invert['percent_multiple'], deg=1)
 trendline_equation = np.poly1d(coefficients)
 x_sorted = np.sort(df_species_invert['percent_invert'])
@@ -1616,7 +1607,7 @@ plot_path = os.path.join(plots_dir, plot_filename)
 plt.savefig(plot_path, format=plot_format, dpi=dpi)
 plt.close(fig)
 
-####################### AUTHOR FREQUENCY IN NATURE AND SCIENCE ###############
+# Author frequency in Nature/Science
 pub_bins = [0, 2, 5, 50]
 pub_labels = ['1 article', '2-4 articles', '5+ articles']
 # frequencies = df_names['count'].value_counts(bins=pub_bins, sort=False).reset_index()
