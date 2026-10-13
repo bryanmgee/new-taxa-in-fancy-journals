@@ -829,7 +829,7 @@ for i, pct in enumerate(merged_df['difference']):
     x_pos = pct + 0.1 if pct > 0 else pct - 0.15
     ax.text(x_pos, i, f' {pct:.1f}%', ha=position, va='center', fontsize=label_font)
 
-ax.set_title(f'Comparison of proportions (in PBDB vs. not in PBDB)', fontsize=title_font, fontweight='bold')
+ax.set_title(f'Comparison of proportions (full dataset vs. not in PBDB)', fontsize=title_font, fontweight='bold')
 ax.set_yticks(merged_df['classification'])
 ax.set_xlabel('Percent difference', fontsize=axis_font, fontweight='bold')
 ax.set_ylabel('', fontsize=axis_font, fontweight='bold')
@@ -1476,7 +1476,7 @@ colors = journals_merged['journal'].map(color_mapping_journals)
 plot_filename = f'{today}_journals_charismatic-against-JIF.{plot_format}'
 fig, axs = plt.subplots(1, 2, sharex=True, figsize=(img_width, img_height))
 #### Shared title and x-axis title
-fig.suptitle('Comparison of percent charismatic against JIF', fontsize=title_font)
+fig.suptitle('Comparison of percent charismatic against JIF', fontsize=title_font, fontweight='bold')
 fig.supxlabel('log10-transformed Journal Impact Factor (JIF)', ha='center', va='bottom', fontsize=axis_font, fontweight='bold')
 axs[0].scatter(journals_merged['log_jif'], journals_merged['Charismatic'], color=colors, s=75)
 axs[0].set_ylabel('Percent of new species in Avemetatarsalia or Mammalia', fontsize=axis_font, fontweight='bold')

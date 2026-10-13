@@ -1,13 +1,15 @@
 # README
 This repository contains code for the preprint "It runs in the family: New extinct species from charismatic clades are more likely to be published in high-impact journals than those from non-charismatic clades", which examines whether certain clades are disproportionately overrepresented in high-impact journals. 
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![DOI](https://zenodo.org/badge/858925551.svg)](https://doi.org/10.5281/zenodo.23190854) [![bioRxiv:10.64898/2026.10.06.756798](http://img.shields.io/badge/DOI-10.64898/2026.10.06.756798-B31B1B.svg)](https://doi.org/10.64898/2026.10.06.756798)
+
 ## Metadata
 * *Version*: 2.1.0
 * *Released*: 2026/10/06
 * *Author(s)*: Bryan M. Gee ([ORCID: 0000-0003-4517-3290](https://orcid.org/0000-0003-4517-3290))
 * *Contributor(s)*: None
 * *License*: [MIT](https://opensource.org/license/mit)
-* *README last updated*: 2026/10/06
+* *README last updated*: 2026/10/13
 
 ## Contents
 | File | Description |
