@@ -1,7 +1,8 @@
 # README
-This repository contains code for the preprint "It runs in the family: New extinct species from charismatic clades are more likely to be published in high-impact journals than those from non-charismatic clades", which examines whether certain clades are disproportionately overrepresented in high-impact journals. 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![Zenodo](https://zenodo.org/badge/858925551.svg)](https://doi.org/10.5281/zenodo.23190854) [![bioRxiv](https://img.shields.io/badge/biorxiv-preprint-brightgreen.svg)](https://doi.org/10.64898/2026.10.06.756798)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![Zenodo](https://zenodo.org/badge/858925551.svg)](https://doi.org/10.5281/zenodo.23190854) [![bioRxiv](http://img.shields.io/badge/DOI-10.64898/2026.10.06.756798-B31B1B.svg)](https://doi.org/10.64898/2026.10.06.756798)
+
+This repository contains code for the preprint "It runs in the family: New extinct species from charismatic clades are more likely to be published in high-impact journals than those from non-charismatic clades", which examines whether certain clades are disproportionately overrepresented in high-impact journals. 
 
 ## Metadata
 * *Version*: 2.1.0
