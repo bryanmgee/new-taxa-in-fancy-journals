@@ -702,9 +702,9 @@ for name, tier in dfs_dict.items():
         total = len(df_subset)
         groups = df_subset['geography'].value_counts().rename_axis('geography').reset_index(name='count')
         groups['percentage'] = (groups['count'] / total) * 100
-        cut = 1
-        groups_top = groups[groups['percentage'] > cut]
-        print(groups_top)
+        # Percent of group that country has to be at or above to be included
+        threshold = 1
+        groups_top = groups[groups['percentage'] > threshold]
 
         ax.barh(groups_top['geography'], groups_top['percentage'], color=[color_mapping_geo[x] for x in groups_top['geography']], edgecolor='black', linewidth=1.2)
 
